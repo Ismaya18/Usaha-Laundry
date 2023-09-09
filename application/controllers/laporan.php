@@ -1,0 +1,39 @@
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+
+class Laporan extends CI_Controller {
+
+    public function __construct()
+    {
+        parent::__construct();
+        $this->load->model('m_laporan');
+        $this->load->helper('tgl_indo_helper');
+    }
+
+    public function index()
+    {
+        $isi['content'] = 'backend/laporan/f_laporan';
+        $isi['judul'] = 'Laporan Transaksi';
+        $this->load->view('backend/dashboard', $isi);
+    }
+
+    public function cetak_laporan()
+    {
+        $this->load->library('pdf');
+        $tgl_mulai = $this->input->post('tanggal_mulai');
+        $tgl_akhir = $this->input->post('tanggal_akhir');
+        $isi['laporan'] = $this->m_laporan->filter_laporan($tgl_mulai, $tgl_akhir);
+        $this->session->set_userdata('tanggal_mulai', $tgl_mulai);
+        $this->session->set_userdata('tanggal_akhir', $tgl_akhir);
+        $this->load->view('backend/laporan/cetak_laporan', $isi);
+
+        $paper_size = 'A4';
+        $orientation = "landscape";
+        $html = $this->output->get_output();
+        $this->pdf->set_paper($paper_size, $orientation);
+
+        $this->pdf->load_html($html);
+        $this->pdf->render();
+        $this->pdf->stream("Laporan Transaksi", array('Attachment'=>0));
+    }
+}
